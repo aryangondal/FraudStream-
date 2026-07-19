@@ -1,0 +1,73 @@
+import os
+from pathlib import Path
+
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import average_precision_score, precision_score, recall_score
+
+from src.data_loader import load_creditcard_data
+
+MODEL_FILENAME = "isolation_forest.joblib"
+FEATURE_COLUMNS = [
+    "Time",
+    *[f"V{i}" for i in range(1, 29)],
+    "Amount",
+]
+
+
+def get_model_path() -> Path:
+    root_dir = Path(__file__).resolve().parent.parent
+    return root_dir / "models" / MODEL_FILENAME
+
+
+def train_model(random_state: int = 42, contamination: float = 0.0017) -> None:
+    df = load_creditcard_data()
+    X = df[FEATURE_COLUMNS].copy()
+    y_true = df["Class"].copy()
+
+    print("Training IsolationForest on unsupervised features...")
+    # IsolationForest is trained without using the Class label.
+    # The contamination parameter estimates the fraction of outliers in the dataset.
+    # We choose a small contamination value close to the known fraud rate to make the
+    # anomaly threshold more realistic for this highly imbalanced dataset.
+    model = IsolationForest(
+        n_estimators=200,
+        max_samples="auto",
+        contamination=contamination,
+        random_state=random_state,
+        n_jobs=-1,
+    )
+    model.fit(X)
+
+    anomaly_scores = -model.decision_function(X)
+    predicted_anomaly = model.predict(X)
+    y_pred = np.where(predicted_anomaly == -1, 1, 0)
+
+    precision = precision_score(y_true, y_pred, zero_division=0)
+    recall = recall_score(y_true, y_pred, zero_division=0)
+    pr_auc = average_precision_score(y_true, anomaly_scores)
+
+    print("\nEvaluation results:")
+    print(f"Contamination used: {contamination:.6f}")
+    print(f"Predicted fraud count: {y_pred.sum()}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall:    {recall:.4f}")
+    print(f"PR-AUC:    {pr_auc:.4f}")
+    print(
+        "\nNote: accuracy is not reported because the dataset is highly imbalanced."
+        " A model that predicts all transactions as non-fraud can still achieve >99% accuracy while missing every fraud."
+    )
+    print(
+        "PR-AUC and recall are more informative for this fraud detection task because they focus on the rare positive class."
+    )
+
+    model_path = get_model_path()
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, model_path)
+    print(f"Saved trained model to {model_path}")
+
+
+if __name__ == "__main__":
+    train_model()
