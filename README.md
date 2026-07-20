@@ -1,4 +1,4 @@
-# Sentinel — Fraud Detection Phase 1
+# FraudStream — Fraud Detection Phase 1
 
 Sentinel is a fraud detection portfolio project. Phase 1 focuses on dataset ingestion, exploratory analysis, and a baseline unsupervised anomaly detector using Isolation Forest.
 
