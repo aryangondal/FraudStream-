@@ -4,39 +4,13 @@ from pathlib import Path
 import pandas as pd
 
 DATA_FILENAME = "creditcard.csv"
-EXPECTED_COLUMNS = [
-    "Time",
-    "V1",
-    "V2",
-    "V3",
-    "V4",
-    "V5",
-    "V6",
-    "V7",
-    "V8",
-    "V9",
-    "V10",
-    "V11",
-    "V12",
-    "V13",
-    "V14",
-    "V15",
-    "V16",
-    "V17",
-    "V18",
-    "V19",
-    "V20",
-    "V21",
-    "V22",
-    "V23",
-    "V24",
-    "V25",
-    "V26",
-    "V27",
-    "V28",
-    "Amount",
-    "Class",
-]
+
+# Single source of truth for column layout. train.py, explore.py, and Phase 2's
+# inference endpoint must all use FEATURE_COLUMNS (in this order) rather than
+# redefining their own list, or feature order can silently drift between them.
+FEATURE_COLUMNS = ["Time", *[f"V{i}" for i in range(1, 29)], "Amount"]
+TARGET_COLUMN = "Class"
+EXPECTED_COLUMNS = [*FEATURE_COLUMNS, TARGET_COLUMN]
 
 
 def get_data_path() -> Path:

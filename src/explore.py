@@ -1,12 +1,10 @@
-import numpy as np
+from pathlib import Path
+
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from src.data_loader import load_creditcard_data
-
-
-FEATURE_COLUMNS = [col for col in pd.Index(["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount"]) if col != "Class"]
+from src.data_loader import FEATURE_COLUMNS, load_creditcard_data
 
 
 def explore_data() -> pd.DataFrame:
@@ -48,7 +46,9 @@ def explore_data() -> pd.DataFrame:
         sns.histplot(df[feature], bins=60, kde=True, ax=ax)
         ax.set_title(f"Distribution of {feature}")
     plt.tight_layout()
-    plot_path = "notebooks/explore_distributions.png"
+    notebooks_dir = Path(__file__).resolve().parent.parent / "notebooks"
+    notebooks_dir.mkdir(parents=True, exist_ok=True)
+    plot_path = notebooks_dir / "explore_distributions.png"
     fig.savefig(plot_path, dpi=150)
     plt.close(fig)
     print(f"Saved feature distribution plot to {plot_path}")

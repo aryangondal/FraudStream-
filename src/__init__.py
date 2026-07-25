@@ -1,1 +1,1 @@
-"""Sentinel source package."""
+"""FraudStream source package."""
